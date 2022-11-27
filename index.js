@@ -1,19 +1,17 @@
 import express from 'express';
-import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
-import { validationResult } from 'express-validator';
 
-import { registerValidation }  from './validations/auth.js'
+import { registerValidation, loginValidation, postCreateValidation }  from './validations.js';
 
+import checkAuth from './utils/checkAuth.js';
 
-import UserModel from './models/User.js'
-
+import * as UserController from './controllers/UserController.js';
+import * as PostController from './controllers/UseController.js';
 
 mongoose
     .connect
             (
-            'mongodb+srv://admin:qqqqqq@cluster0.wqamm5o.mongodb.net/?retryWrites=true&w=majority'
+            'mongodb+srv://admin:qqqqqq@cluster0.wqamm5o.mongodb.net/blog?retryWrites=true&w=majority'
             )
     .then(() => console.log('DB Ok'))
     .catch((err) => console.log('DB error', err));
@@ -22,34 +20,16 @@ const app = express();
 
 app.use(express.json());
 
-
-app.post('/auth/register', registerValidation, async (req, res) => {
-    const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json(errors.array());
-    }
-
-    const password = req.body.password;
-    const salt = await bcrypt.genSalt(10)
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    const doc = new UserModel({
-        email: req.body.email,
-        fullName: req.body.fullName,
-        avatarUrl: req.body.avatarUrl,
-        passwordHash,
-    });
+app.post('/auth/login', loginValidation, UserController.login);
+app.post('/auth/register', registerValidation, UserController.register);
+app.get('/auth/me', checkAuth, UserController.getMe);
 
 
-    const user = await doc.save();
-
-
-    res.json({
-        success: true,
-    });
-});
-
-
+// app.get('/posts', PostController.getAll);
+// app.get('/posts/:id', PostController.getOne);
+app.post('/posts', checkAuth, postCreateValidation, PostController.create);
+// app.delete('/posts', PostController.remove);
+// app.patch('/posts', PostController.update);
 
 
 app.listen(4444, (err) => {
@@ -58,4 +38,4 @@ app.listen(4444, (err) => {
     }
 
     console.log('Server Ok')
-})
+});
