@@ -62,7 +62,7 @@ export const getOne = async (req, res) => {
 
             res.json(doc);
         },
-    );
+    ).populate('user');
 
     } catch (err) {
         console.log(err)
@@ -113,10 +113,10 @@ export const create = async (req, res) => {
     try {
         const doc = new PostModel({
             title: req.body.title,
-            text: req.body.title,
+            text: req.body.text,
             imageUrl: req.body.imageUrl,
             user: req.userId,
-            tags: req.body.tags,
+            tags: req.body.tags.split(','),
         });
 
         const post = await doc.save();
@@ -143,7 +143,7 @@ export const update = async (req, res) => {
             text: req.body.text,
             imageUrl: req.body.imageUrl,
             user: req.userId,
-            tags: req.body.tags,
+            tags: req.body.tags.split(','),
         },
         );
 
